@@ -15,9 +15,7 @@ public class Wall {
         this.yPosition = yPosition;
     }
 
-    public void drawWall(){
-        wall.drawFromTopLeft(xPosition, yPosition);
-    }
+    public void render(){ wall.drawFromTopLeft(xPosition, yPosition); }
 
     public Rectangle getBoundingBox(){
         Point barrier = new Point(xPosition, yPosition);

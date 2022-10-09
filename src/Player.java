@@ -2,7 +2,7 @@ import bagel.*;
 import bagel.util.Point;
 import bagel.util.Rectangle;
 // partial project1 solution has been used
-public class Player {
+public class Player extends Entity implements Moveable {
     private final static String FAE_LEFT = "res/fae/faeLeft.png";
     private final static String FAE_RIGHT = "res/fae/faeRight.png";
     private double playerX;
@@ -128,7 +128,7 @@ public class Player {
         gameObject.checkOutOfBounds(this);
     }
 
-    private void setPrevPosition(){
+    public void setPrevPosition(){
         this.prevPosition = new Point(position.x, position.y);
     }
 
@@ -136,7 +136,7 @@ public class Player {
         this.position = prevPosition;
     }
 
-    private void move(double xMove, double yMove){
+    public void move(double xMove, double yMove){
         double newX = position.x + xMove;
         double newY = position.y + yMove;
         this.position = new Point(newX, newY);

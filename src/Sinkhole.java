@@ -6,15 +6,15 @@ public class Sinkhole {
     Point position;
     private Image sinkhole;
 
+    private boolean isDeleted = false;
+
 
     Sinkhole(Point position) {
         this.position = position;
         sinkhole = new Image("res/sinkhole.png");
     }
 
-    public void drawSinkhole() {
-        sinkhole.drawFromTopLeft(position.x, position.y);
-    }
+    public void render() { sinkhole.drawFromTopLeft(position.x, position.y); }
 
     public Rectangle getBoundingBox(){
         Rectangle barrier = sinkhole.getBoundingBox();
@@ -26,4 +26,6 @@ public class Sinkhole {
         return position;
     }
 
+    public void setDeleted() { isDeleted = true; }
+    public boolean isDeleted() { return isDeleted; }
 }

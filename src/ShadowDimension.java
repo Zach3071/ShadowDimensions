@@ -19,6 +19,11 @@ import java.util.List;
 public class ShadowDimension extends AbstractGame {
 
     // window, title and message sizes
+    private final static float REFRESH_RATE = 60;
+    private final static float MILLI_SECONDS = 1000;
+    private final static double LEVEL_COMPLETE_DELAY = 3000;
+    int initialFrameCount = 0;
+    private static int counter = 0;
     private final static int WINDOW_WIDTH = 1024;
     private final static int WINDOW_HEIGHT = 768;
     private final static int DEFAULT_FONT_SIZE = 75;
@@ -27,6 +32,7 @@ public class ShadowDimension extends AbstractGame {
     private final static int STARTING_TITLE_POSITION_Y = 250;
     private final static int MESSAGE_POSITION_X = STARTING_TITLE_POSITION_X + 90;
     private final static int MESSAGE_POSITION_Y = STARTING_TITLE_POSITION_Y + 190;
+    private final static int LEVEL_ONE_MESSAGE_POS = 350;
 
 
     // font object used for big default titles, "CONGRATULATIONS!, GAME OVER! etc.
@@ -37,14 +43,18 @@ public class ShadowDimension extends AbstractGame {
 
     // main game messages displayed
     private final static String GAME_TITLE = "SHADOW DIMENSION";
+    private final static String LEVEL_COMPLETE = "LEVEL COMPLETE!";
     private final static String GAME_WIN = "CONGRATULATIONS!";
     private final static String GAME_LOSS = "GAME OVER!";
-    private final Image BACKGROUND_IMAGE = new Image("res/background0.png");
+    private final Image LEVEL_ZERO_BACKGROUND = new Image("res/background0.png");
+    private final Image LEVEL_ONE_BACKGROUND = new Image("res/background1.png");
 
     // game screen boolean values
-    private boolean startScreen = true;
-    private boolean gameScreen = false;
-    private boolean winningScreen = false;
+    private int gameLevel;
+    private boolean hasStarted = false;
+    private boolean isLevelZero = false;
+    private boolean isLevelOne = false;
+    private boolean levelCompletedScreen = false;
     private boolean losingScreen = false;
 
     // player movement and user input
@@ -68,12 +78,19 @@ public class ShadowDimension extends AbstractGame {
     List<Point> listOfSinkholesDeleted = new ArrayList<>();
     List<Wall> listOfWalls = new ArrayList<>();
     List<Sinkhole> listOfSinkholes = new ArrayList<>();
+    List<Tree> listOfTrees = new ArrayList<>();
+    List<DemonEnemy> listOfEnemies = new ArrayList<>();
     Boundary gameWall = new Boundary();
+
+    private final static String LEVEL_ZERO_CSV = "res/level0.csv";
+    private final static String LEVEL_ONE_CSV = "res/level1.csv";
 
 
     public ShadowDimension(){
         super(WINDOW_WIDTH, WINDOW_HEIGHT, GAME_TITLE);
-        readCSV();
+        gameLevel = 0;
+        // loads objects for level0, other levels are loaded in update function
+        readCSV(LEVEL_ZERO_CSV);
     }
 
     /**
@@ -88,7 +105,7 @@ public class ShadowDimension extends AbstractGame {
      * Method used to read file and create objects (You can change this
      * method as you wish).
      */
-    private void readCSV(){
+    private void readCSV(String levelFileName){
 
         String line;
 
@@ -98,30 +115,48 @@ public class ShadowDimension extends AbstractGame {
         final int COLUMN_Y = 2;
 
         try {
-            BufferedReader br = new BufferedReader(new FileReader("res/level0.csv"));
+            BufferedReader br = new BufferedReader(new FileReader(levelFileName));
+            listOfWalls.clear();
+            listOfSinkholes.clear();
+            playerInitialised = false;
             while((line = br.readLine()) != null) {
                 String[] row = line.split(",");
 
                 // Creates player object and initialises starting position
                 if (row[OBJ_COLUMN].equals("Fae") && !playerInitialised){
-
                     Fae.setPosition(Integer.parseInt(row[COLUMN_X]), Integer.parseInt(row[COLUMN_Y]));
                     playerInitialised = true;
                 }
-
                 if (row[OBJ_COLUMN].equals("Wall")) {
                     //Implement objects here except player
                     Wall wall = new Wall(Integer.parseInt(row[COLUMN_X]), Integer.parseInt(row[COLUMN_Y]));
                     listOfWalls.add(wall);
                 }
-
                 if (row[OBJ_COLUMN].equals("Sinkhole")) {
                     Point sinkholePosition = new Point(Integer.parseInt(row[COLUMN_X]),
                             Integer.parseInt(row[COLUMN_Y]));
-
                     Sinkhole sinkhole = new Sinkhole(sinkholePosition);
                     listOfSinkholes.add(sinkhole);
                 }
+                if (row[OBJ_COLUMN].equals("Tree")) {
+                    Point treePosition = new Point(Integer.parseInt(row[COLUMN_X]), Integer.parseInt(row[COLUMN_Y]));
+                    Tree tree = new Tree(treePosition);
+                    listOfTrees.add(tree);
+                }
+                if (row[OBJ_COLUMN].equals("Demon")) {
+                    Point demonPosition = new Point(Integer.parseInt(row[COLUMN_X]), Integer.parseInt(row[COLUMN_Y]));
+                    Demon demon = new Demon(demonPosition);
+                    listOfEnemies.add(demon);
+                    System.out.println(demon.isAggressive());
+                    System.out.println(demon.getDirection());
+                    System.out.println("---------------------");
+                    //System.out.println(demon.getDirection());
+                    //System.out.println(demon.getSpeed());
+                }
+
+
+
+
 
                 // Initialises the game's wall boundary coordinates
                 if (row[OBJ_COLUMN].equals("TopLeft")) {
@@ -133,6 +168,9 @@ public class ShadowDimension extends AbstractGame {
                     BottomRightY = Integer.parseInt(row[COLUMN_Y]);
                 }
 
+
+
+                // clean this
                 Point topLeft = new Point(topLeftX, topLeftY);
                 Point bottomRight = new Point(BottomRightX, BottomRightY);
                 gameWall.setTopLeft(topLeft);
@@ -153,19 +191,49 @@ public class ShadowDimension extends AbstractGame {
 
         // updates and draws walls in game
         for (Wall wall : listOfWalls) {
-            wall.drawWall();
+            wall.render();
         }
+
+        for (Sinkhole sinkhole : listOfSinkholes) {
+            if (!sinkhole.isDeleted()) {
+                sinkhole.render();
+            }
+        }
+
+        for (Tree tree : listOfTrees) {
+            tree.render();
+        }
+
+        for (DemonEnemy demon : listOfEnemies) {
+            //demon.render();
+            demon.update(this);
+        }
+
     }
 
     // draws the background image of the game
-    private void displayGameScreen() {
-        BACKGROUND_IMAGE.draw(Window.getWidth() / 2.0, Window.getHeight() / 2.0);
+    private void displayLevelZero() {
+        LEVEL_ZERO_BACKGROUND.draw(Window.getWidth() / 2.0, Window.getHeight() / 2.0);
     }
 
+    private void displayLevelOne() {
+        LEVEL_ONE_BACKGROUND.draw(Window.getWidth() / 2.0, Window.getHeight() / 2.0);
+    }
     private void displayWinningScreen() {
 
         // Displays centred "CONGRATULATIONS!" text
         titleName.drawString(GAME_WIN, Window.getWidth()/2 - titleName.getWidth(GAME_WIN)/2, Window.getHeight()/2);
+    }
+    private void displayLevelComplete() {
+
+        // Displays centred "LEVEL COMPLETE!" text
+        titleName.drawString(LEVEL_COMPLETE, Window.getWidth()/2 - titleName.getWidth(LEVEL_COMPLETE)/2,
+                Window.getHeight()/2);
+    }
+
+    private void displayLevelOneTitleScreen() {
+        titleMessage.drawString("PRESS SPACE TO START\nPRESS A TO ATTACK\nDEFEAT NAVEC TO WIN",
+                LEVEL_ONE_MESSAGE_POS, LEVEL_ONE_MESSAGE_POS);
     }
 
     private void displayLosingScreen() {
@@ -186,7 +254,7 @@ public class ShadowDimension extends AbstractGame {
 
     /* this function determines if a player has won by checking
     if their coordinates match with the winning coordinates */
-    private boolean hasPlayerWon(Player player){
+    private boolean gateReached(Player player){
 
         return player.getPlayerX() >= WINNING_COORDINATES_X && player.getPlayerY() >= WINNING_COORDINATES_Y;
     }
@@ -196,87 +264,125 @@ public class ShadowDimension extends AbstractGame {
      */
     @Override
     protected void update(Input input) {
-
-        // this variable is set to true in readCSV() if a player has collided with another rectangle barrier
-        barrierHit = false;
-
-        // toggles off the title screen
-        if (input.wasPressed(Keys.SPACE)) {
-            startScreen = false;
-            gameScreen = true;
-        }
-
-        // displays the starting screen, also ensures nothing else is loaded
-        if (startScreen) {
-            displayTitleScreen();
-        }
-
-        // toggles game screen on, loads in the background, objects, the player and health bar
-        if (gameScreen) {
-            displayGameScreen();
-
-            // draws the objects and checks if player interacts with them
-            updateObjects();
-            Fae.update(input, this);
-            HealthBar healthBar = new HealthBar(Fae.getCurrentHealth(), Fae.getMaxHealth());
-            healthBar.drawHealthBar();
-        }
-
-        // triggers game winning screen
-        if (hasPlayerWon(Fae)) {
-            gameScreen = false;
-            winningScreen = true;
-            displayWinningScreen();
-        }
-
-        // character has lost the game, once they have lost all health
-        if (Fae.getCurrentHealth() <= Fae.getMinHealth()) {
-            gameScreen = false;
-            losingScreen = true;
-            displayLosingScreen();
-        }
+        // counts how many frames have passed since program has begun running
+        counter++;
 
         if (input.wasPressed(Keys.ESCAPE)){
             Window.close();
         }
+
+
+        if(!hasStarted){
+            displayTitleScreen();
+            if (input.wasPressed(Keys.SPACE)){
+                hasStarted = true;
+                isLevelZero = true;
+            }
+        }
+        if (levelCompletedScreen){
+            // displays level completed message for 3000 milliseconds
+            if (((REFRESH_RATE/MILLI_SECONDS) * LEVEL_COMPLETE_DELAY) >= counter - initialFrameCount){
+                displayLevelComplete();
+            }
+            else if (input.wasPressed(Keys.SPACE)){
+                isLevelOne = true;
+                levelCompletedScreen = false;
+                // loads csv file
+                readCSV(LEVEL_ONE_CSV);
+            }
+            else {
+                displayLevelOneTitleScreen();
+            }
+        }
+
+
+        // toggles game screen on, loads in the background, objects, the player and health bar
+        if (isLevelZero) {
+            displayLevelZero();
+
+            // draws the objects and checks if player interacts with them
+            updateObjects();
+            Fae.update(input, this);
+            // delegate this to player
+            HealthBar healthBar = new HealthBar(Fae.getCurrentHealth(), Fae.getMaxHealth());
+            healthBar.drawHealthBar();
+
+            if (gateReached(Fae)) {
+                if (initialFrameCount == 0) {
+                    initialFrameCount = counter;
+                }
+                isLevelZero = false;
+                levelCompletedScreen = true;
+            }
+        }
+
+        if (isLevelOne) {
+            displayLevelOne();
+            updateObjects();
+            Fae.update(input, this);
+        }
+
+
+        // character has lost the game, once they have lost all health
+        if (Fae.getCurrentHealth() <= Fae.getMinHealth()) {
+            isLevelZero = false;
+            isLevelOne = false;
+            losingScreen = true;
+            displayLosingScreen();
+        }
+
     }
 
     // imported from project1 solutions
-    public void checkCollisions(Player player) {
-        Rectangle faeBox = new Rectangle(player.getPosition(), player.getCurrentImage().getWidth(),
-                player.getCurrentImage().getHeight());
+    public void checkCollisions(Entity entity) {
+        Rectangle entityBox = new Rectangle(entity.getPosition(), entity.getCurrentImage().getWidth(),
+                entity.getCurrentImage().getHeight());
+
         for (Wall current : listOfWalls) {
             Rectangle wallBox = current.getBoundingBox();
-            if (faeBox.intersects(wallBox)) {
-                player.moveBack();
+            if (entityBox.intersects(wallBox)) {
+                entity.moveBack();
             }
         }
-    }
 
-    public void checkOutOfBounds(Player player){
-        Point currentPosition = player.getPosition();
-        if ((currentPosition.y > gameWall.getBottomY()) || (currentPosition.y < gameWall.getTopY())
-                || (currentPosition.x < gameWall.getLeftX()) || (currentPosition.x > gameWall.getRightX())){
-            player.moveBack();
+        for (Tree current : listOfTrees) {
+            Rectangle treeBox = current.getBoundingBox();
+            if (entityBox.intersects(treeBox)) {
+                entity.moveBack();
+            }
         }
-
 
         for (Sinkhole sinkhole : listOfSinkholes) {
             // only draws sinkholes that haven't been hit by player
-            if (!listOfSinkholesDeleted.contains(sinkhole.getSinkholePosition())) {
-                sinkhole.drawSinkhole();
-
+            if (!sinkhole.isDeleted()) {
+            if (entityBox.intersects(sinkhole.getBoundingBox()) && !(entity instanceof Player)) {
+                entity.moveBack();
+            }
                 // player is damaged if they hit sinkhole
                 if (Fae.getBoundingBox().intersects(sinkhole.getBoundingBox()) == true) {
 
                     Fae.loseHealth(SINKHOLE_DAMAGE);
-                    listOfSinkholesDeleted.add(sinkhole.getSinkholePosition());
+                    sinkhole.setDeleted();
 
                     System.out.println("Sinkhole inflicts " + SINKHOLE_DAMAGE + " damage on Fae.");
                     System.out.print(" Fae's current health: " + Fae.getCurrentHealth() + "/" +
                             Fae.getMaxHealth());
+
+
+
                 }
             }
         }
+    }
+
+    public void checkOutOfBounds(Entity entity){
+        Point currentPosition = entity.getPosition();
+        if ((currentPosition.y > gameWall.getBottomY()) || (currentPosition.y < gameWall.getTopY())
+                || (currentPosition.x < gameWall.getLeftX()) || (currentPosition.x > gameWall.getRightX())){
+            entity.moveBack();
+        }
+
+
+
     }
 }
