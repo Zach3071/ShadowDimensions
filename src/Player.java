@@ -1,10 +1,13 @@
 import bagel.*;
 import bagel.util.Point;
 import bagel.util.Rectangle;
+
 // partial project1 solution has been used
 public class Player extends Entity implements Moveable {
     private final static String FAE_LEFT = "res/fae/faeLeft.png";
     private final static String FAE_RIGHT = "res/fae/faeRight.png";
+    private final static String ATTACK_LEFT = "res/fae/faeAttackLeft.png";
+    private final static String ATTACK_RIGHT = "res/fae/faeAttackRight.png";
     private double playerX;
     private double playerY;
     private final Image faeLeft;
@@ -15,17 +18,19 @@ public class Player extends Entity implements Moveable {
     private Point prevPosition;
     private Image currentImage;
 
-    private double currentHealth = 100;
+    private double currentHealth;
     private final double MAX_HEALTH = 100;
     private final double MIN_HEALTH = 0;
-
-    Player(double startingPosX, double startingPosY) {
-        faeLeft = new Image("res/fae/faeLeft.png");
-        faeRight = new Image("res/fae/faeRight.png");
-        this.playerX = startingPosX;
-        this.playerY = startingPosY;
-        this.position = new Point(startingPosX, startingPosY);
-    }
+    private final int DAMAGE = 20;
+    private boolean isAttacking;
+    private int currentFrameCount = 0;
+    private int initialFrameCount = 0;
+    private final static double ATTACK_DELAY = 2000;
+    private final static double ATTACK_LENGTH = 1000;
+    private final static double HEALTH_BAR_X = 20;
+    private final static double HEALTH_BAR_Y = 25;
+    private final static int HEALTH_BAR_FONT_SIZE = 30;
+    HealthBar healthBar = new HealthBar(currentHealth, MAX_HEALTH);
 
     Player(){
         faeLeft = new Image("res/fae/faeLeft.png");
@@ -36,13 +41,6 @@ public class Player extends Entity implements Moveable {
         //COLOUR.setBlendColour(GREEN);
     }
 
-    public void setPlayerX(double playerX ) {
-        this.playerX = playerX;
-    }
-
-    public void setPlayerY(double playerY){
-        this.playerY = playerY;
-    }
     public double getPlayerX() {
         return position.x;
     }
@@ -63,22 +61,10 @@ public class Player extends Entity implements Moveable {
         this.playerY = playerY;
     }
 
+    public void loseHealth(double healthLost){ currentHealth -= healthLost; }
 
-
-
-    public Rectangle getBoundingBox(){
-
-
-        Rectangle barr = faeLeft.getBoundingBox();
-        barr.moveTo(position);
-        return barr;
-    }
-
-
-
-    public void loseHealth(double healthLost){
-        currentHealth -= healthLost;
-    }
+    @Override
+    boolean isDead() { return currentHealth <= MAX_HEALTH;}
 
     public double getCurrentHealth(){
         if (currentHealth <= MIN_HEALTH) {
@@ -86,18 +72,10 @@ public class Player extends Entity implements Moveable {
         }
         return currentHealth;
     }
-
-    public double getMaxHealth(){
-        return MAX_HEALTH;
-    }
-
+    public double getMaxHealth(){ return MAX_HEALTH; }
     public double getMinHealth() {
         return MIN_HEALTH;
     }
-
-
-
-
 
     public void update(Input input, ShadowDimension gameObject){
         if (input.isDown(Keys.UP)){
@@ -122,24 +100,59 @@ public class Player extends Entity implements Moveable {
                 facingRight = !facingRight;
             }
         }
+
+         if (!isAttacking) {
+             // adds a 2-second cool down timer, which prevents user from attacking
+             if (((ShadowDimension.REFRESH_RATE / ShadowDimension.MILLI_SECONDS) * ATTACK_DELAY)
+                     <= currentFrameCount - initialFrameCount) {
+
+                 if (input.wasPressed(Keys.A)) {
+                     initialFrameCount = currentFrameCount;
+                     isAttacking = true;
+                 }
+             }
+         } else {
+             if (facingRight) {
+                this.currentImage = new Image(ATTACK_RIGHT);
+            } else {
+                this.currentImage = new Image(ATTACK_LEFT);
+            }
+        }
+         // this returns attacking state to false after 1 second of being active
+        if (((ShadowDimension.REFRESH_RATE/ ShadowDimension.MILLI_SECONDS) * ATTACK_LENGTH)
+                <= currentFrameCount - initialFrameCount) {
+            isAttacking = false;
+            if (facingRight) {
+                this.currentImage = new Image(FAE_RIGHT);
+            }
+            else {
+                this.currentImage = new Image(FAE_LEFT);
+            }
+        }
         this.currentImage.drawFromTopLeft(position.x, position.y);
         gameObject.checkCollisions(this);
         //renderHealthPoints();
+        healthBar.drawHealthBar(HEALTH_BAR_X, HEALTH_BAR_Y, HEALTH_BAR_FONT_SIZE, currentHealth, MAX_HEALTH);
         gameObject.checkOutOfBounds(this);
+        currentFrameCount++;
     }
 
-    public void setPrevPosition(){
-        this.prevPosition = new Point(position.x, position.y);
-    }
+    public void setPrevPosition(){ this.prevPosition = new Point(position.x, position.y); }
 
-    public void moveBack(){
-        this.position = prevPosition;
-    }
+    public void moveBack(){ this.position = prevPosition; }
 
     public void move(double xMove, double yMove){
         double newX = position.x + xMove;
         double newY = position.y + yMove;
         this.position = new Point(newX, newY);
     }
+    @Override
+    public Rectangle getBoundingBox() {
+        Rectangle entityBox = new Rectangle(position, getCurrentImage().getWidth(),
+                getCurrentImage().getHeight());
+        return entityBox;
+    }
+    public boolean isAttacking(){ return isAttacking; }
+    public int getDamage(){ return DAMAGE; }
 
 }

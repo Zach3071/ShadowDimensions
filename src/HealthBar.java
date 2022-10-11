@@ -17,11 +17,12 @@ public class HealthBar {
         this.maximumHealthPoints = maximumHealthPoints;
     }
 
-    public void drawHealthBar(){
+    public void drawHealthBar(double xPosition, double yPosition, int fontSize,
+                              double currentHealthPoints, double maximumHealthPoints){
         double healthPercent = currentHealthPoints / maximumHealthPoints * 100;
         int roundedHealthPercent = (int) (healthPercent + 0.5);
 
-        Font healthBarFont = new Font("res/frostbite.ttf", 30);
+        Font healthBarFont = new Font("res/frostbite.ttf", fontSize);
 
         // If between 65 and 100 health percentage, set health bar to green
         colour.setBlendColour(0, 0.8, 0.2);
@@ -38,6 +39,6 @@ public class HealthBar {
         }
 
         // Displays the health bar
-        healthBarFont.drawString(Integer.toString(roundedHealthPercent) + "%", 20, 25, colour);
+        healthBarFont.drawString(Integer.toString(roundedHealthPercent) + "%", xPosition, yPosition, colour);
     }
 }

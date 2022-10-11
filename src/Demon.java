@@ -1,10 +1,6 @@
-import bagel.*;
 import bagel.Image;
 import bagel.util.Point;
-
 import bagel.util.Rectangle;
-
-import javax.swing.text.Position;
 
 public class Demon extends DemonEnemy {
     private final static String DEMON_LEFT = "res/demon/demonLeft.png";
@@ -17,24 +13,34 @@ public class Demon extends DemonEnemy {
     private double SPEED;
     private Image currentImage;
     private Point position;
+    private boolean isInvincible;
+    private boolean facingLeft;
+    private int currentFrameCount;
+    private int initialFrameCount;
+    private boolean checkedInitialFrame = false;
+    private final double INVINCIBLE_LENGTH = INVINCIBLE_TIME;
+    private double MAX_HEALTH = DEMON_HEALTH;
+    private double currentHealth = MAX_HEALTH;
+    HealthBar healthBar = new HealthBar(currentHealth, MAX_HEALTH);
 
     Demon(Point position) {
         this.position = position;
         this.isAggressive = randomBoolean();
-        // sets demon to left by default
+        // faces and makes demon left and stationary by default
         this.currentImage = new Image(DEMON_LEFT);
-
         this.direction = "Stationary";
+        this.facingLeft = true;
+
         if (isAggressive) {
             direction = String.valueOf(Direction.setRandomDirection());
             SPEED = setRandomSpeed();
 
             if (direction.equals("RIGHT")) {
+                this.facingLeft = false;
                 this.currentImage = new Image(DEMON_RIGHT);
             }
         }
     }
-
 
     @Override
     void update(ShadowDimension gameObject) {
@@ -47,28 +53,52 @@ public class Demon extends DemonEnemy {
         } else if (direction.equals("RIGHT")) {
             move(SPEED, 0);
         }
-
+        if (isInvincible) {
+            initiateInvincibility(gameObject);
+        }
+        if (!isInvincible) {
+            if (facingLeft) {
+                currentImage = new Image(DEMON_LEFT);
+            } else {
+                currentImage = new Image(DEMON_RIGHT);
+            }
+        }
+        healthBar.drawHealthBar(position.x, position.y-6, HEALTHBAR_FONT, currentHealth, MAX_HEALTH);
         gameObject.checkOutOfBounds(this);
         gameObject.checkCollisions(this);
         render();
+        currentFrameCount++;
     }
-//    private boolean checkCollision() {
-//        Rectangle demonBox = new Rectangle(position, currentImage,
-//                player.getCurrentImage().getHeight());
-//    }
+
+    // turns object invincible if attacked
+    public void initiateInvincibility(ShadowDimension gameObject) {
+        if (facingLeft) {
+            currentImage = new Image(INVINCIBLE_LEFT);
+        } else {
+            currentImage = new Image(INVINCIBLE_RIGHT);
+        }
+        // starts invincibility timer
+        if (!checkedInitialFrame) {
+            initialFrameCount = currentFrameCount;
+            checkedInitialFrame = true;
+        }
+        // checks if invincibility timer has been reached
+        if (((ShadowDimension.REFRESH_RATE/ ShadowDimension.MILLI_SECONDS) * INVINCIBLE_LENGTH)
+                <= currentFrameCount - initialFrameCount) {
+            isInvincible = false;
+            checkedInitialFrame = false;
+        }
+    }
     @Override
     public void render() {
         this.currentImage.drawFromTopLeft(position.x, position.y);
     }
 
-    public String getDirection() { return direction; }
-    public double getSpeed() { return SPEED; }
     // used for determining if demon is passive or aggressive
     private boolean randomBoolean() {
         // 0.5 used for probability of random boolean
         return Math.random() < 0.5;
     }
-    public boolean isAggressive() { return isAggressive; }
 
     @Override
     public void move(double xMove, double yMove) {
@@ -79,29 +109,48 @@ public class Demon extends DemonEnemy {
 
     @Override
     public void moveBack() {
-        if (direction.equals("UP")) {
-            direction = "DOWN";
-        }
-        else if (direction.equals("DOWN")) {
-            direction = "UP";
-        }
-        else if (direction.equals("RIGHT")) {
-            direction = "LEFT";
-        }
-        else if (direction.equals("LEFT")) {
-            direction = "RIGHT";
+        switch (direction) {
+            case "UP":
+                direction = "DOWN";
+                break;
+            case "DOWN":
+                direction = "UP";
+                break;
+            case "RIGHT":
+                direction = "LEFT";
+                facingLeft = true;
+                if (!isInvincible) {
+                    currentImage = new Image(DEMON_LEFT);
+                }
+                break;
+            case "LEFT":
+                direction = "RIGHT";
+                facingLeft = false;
+                if (!isInvincible) {
+                    currentImage = new Image(DEMON_RIGHT);
+                }
+                break;
         }
     }
 
     @Override
-    public void setPrevPosition() {
+    public Point getPosition() { return position; }
 
+    @Override
+    public Image getCurrentImage() { return currentImage; }
+
+    @Override
+    public Rectangle getBoundingBox() {
+        Rectangle entityBox = new Rectangle(position, getCurrentImage().getWidth(),
+                getCurrentImage().getHeight());
+        return entityBox;
     }
 
-    @Override
-    Point getPosition() { return position; }
 
-    @Override
-    Image getCurrentImage() { return currentImage; }
 
+
+    public void setInvincible() { isInvincible = true; }
+    public boolean isInvincible() { return isInvincible; }
+    public void loseHealth(double healthLost){ currentHealth -= healthLost; }
+    public boolean isDead() { return currentHealth <= MIN_HEALTH; }
 }

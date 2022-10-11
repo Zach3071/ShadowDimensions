@@ -19,8 +19,8 @@ import java.util.List;
 public class ShadowDimension extends AbstractGame {
 
     // window, title and message sizes
-    private final static float REFRESH_RATE = 60;
-    private final static float MILLI_SECONDS = 1000;
+    public final static float REFRESH_RATE = 60;
+    public final static float MILLI_SECONDS = 1000;
     private final static double LEVEL_COMPLETE_DELAY = 3000;
     int initialFrameCount = 0;
     private static int counter = 0;
@@ -147,16 +147,14 @@ public class ShadowDimension extends AbstractGame {
                     Point demonPosition = new Point(Integer.parseInt(row[COLUMN_X]), Integer.parseInt(row[COLUMN_Y]));
                     Demon demon = new Demon(demonPosition);
                     listOfEnemies.add(demon);
-                    System.out.println(demon.isAggressive());
-                    System.out.println(demon.getDirection());
-                    System.out.println("---------------------");
-                    //System.out.println(demon.getDirection());
-                    //System.out.println(demon.getSpeed());
+
                 }
 
-
-
-
+                if (row[OBJ_COLUMN].equals("Navec")) {
+                    Point navecPosition = new Point(Integer.parseInt(row[COLUMN_X]), Integer.parseInt(row[COLUMN_Y]));
+                    Navec navec = new Navec(navecPosition);
+                    listOfEnemies.add(navec);
+                }
 
                 // Initialises the game's wall boundary coordinates
                 if (row[OBJ_COLUMN].equals("TopLeft")) {
@@ -205,8 +203,9 @@ public class ShadowDimension extends AbstractGame {
         }
 
         for (DemonEnemy demon : listOfEnemies) {
-            //demon.render();
-            demon.update(this);
+            if (!demon.isDead()) {
+                demon.update(this);
+            }
         }
 
     }
@@ -278,6 +277,12 @@ public class ShadowDimension extends AbstractGame {
                 hasStarted = true;
                 isLevelZero = true;
             }
+            if (input.wasPressed(Keys.K)) {
+                hasStarted = true;
+                isLevelOne = true;
+                levelCompletedScreen = false;
+                readCSV(LEVEL_ONE_CSV);
+            }
         }
         if (levelCompletedScreen){
             // displays level completed message for 3000 milliseconds
@@ -303,9 +308,10 @@ public class ShadowDimension extends AbstractGame {
             // draws the objects and checks if player interacts with them
             updateObjects();
             Fae.update(input, this);
+
             // delegate this to player
-            HealthBar healthBar = new HealthBar(Fae.getCurrentHealth(), Fae.getMaxHealth());
-            healthBar.drawHealthBar();
+//            HealthBar healthBar = new HealthBar(Fae.getCurrentHealth(), Fae.getMaxHealth());
+//            healthBar.drawHealthBar();
 
             if (gateReached(Fae)) {
                 if (initialFrameCount == 0) {
@@ -317,11 +323,24 @@ public class ShadowDimension extends AbstractGame {
         }
 
         if (isLevelOne) {
+
             displayLevelOne();
             updateObjects();
             Fae.update(input, this);
-        }
+            if (Fae.isAttacking()){
+                System.out.println("FaE IS ATtacking");
+                // check enemy method
+                if (checkAttack(Fae) != null) {
+                    if (!checkAttack(Fae).isInvincible()) {
+                        checkAttack(Fae).loseHealth(Fae.getDamage());
+                    }
+                    checkAttack(Fae).setInvincible();
 
+                    System.out.println(checkAttack(Fae).getPosition());
+                }
+            }
+
+        }
 
         // character has lost the game, once they have lost all health
         if (Fae.getCurrentHealth() <= Fae.getMinHealth()) {
@@ -332,11 +351,21 @@ public class ShadowDimension extends AbstractGame {
         }
 
     }
-
+    // returns enemy that has been attacked
+    public DemonEnemy checkAttack(Entity entity) {
+        Rectangle entityBox = entity.getBoundingBox();
+        // add if statement for player
+        for (DemonEnemy current : listOfEnemies) {
+            if (entityBox.intersects(current.getBoundingBox())) {
+                return current;
+            }
+        }
+        return null;
+    }
     // imported from project1 solutions
     public void checkCollisions(Entity entity) {
-        Rectangle entityBox = new Rectangle(entity.getPosition(), entity.getCurrentImage().getWidth(),
-                entity.getCurrentImage().getHeight());
+
+        Rectangle entityBox = entity.getBoundingBox();
 
         for (Wall current : listOfWalls) {
             Rectangle wallBox = current.getBoundingBox();
@@ -355,22 +384,24 @@ public class ShadowDimension extends AbstractGame {
         for (Sinkhole sinkhole : listOfSinkholes) {
             // only draws sinkholes that haven't been hit by player
             if (!sinkhole.isDeleted()) {
-            if (entityBox.intersects(sinkhole.getBoundingBox()) && !(entity instanceof Player)) {
-                entity.moveBack();
-            }
-                // player is damaged if they hit sinkhole
-                if (Fae.getBoundingBox().intersects(sinkhole.getBoundingBox()) == true) {
 
+                // rebounds non-players when intersecting with sinkholes (causes no damage)
+                if (entityBox.intersects(sinkhole.getBoundingBox()) && !(entity instanceof Player)) {
+                    entity.moveBack();
+                }
+                // a player is damaged if they hit a sinkhole
+                else if (entityBox.intersects(sinkhole.getBoundingBox()) == true) {
+                        // FIX THIS CHANGE TO ENTITY
                     Fae.loseHealth(SINKHOLE_DAMAGE);
                     sinkhole.setDeleted();
 
                     System.out.println("Sinkhole inflicts " + SINKHOLE_DAMAGE + " damage on Fae.");
                     System.out.print(" Fae's current health: " + Fae.getCurrentHealth() + "/" +
-                            Fae.getMaxHealth());
+                    Fae.getMaxHealth());
 
 
 
-                }
+                    }
             }
         }
     }
