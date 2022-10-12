@@ -1,5 +1,5 @@
 public interface Invincible {
     boolean isInvincible();
-    void setInvincible();
-    void initiateInvincibility(ShadowDimension gameObject);
+    void triggerInvincibility();
+    void renderInvincibility(ShadowDimension gameObject);
 }

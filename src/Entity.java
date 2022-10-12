@@ -8,5 +8,7 @@ public abstract class Entity {
     abstract void moveBack();
     abstract Rectangle getBoundingBox();
     abstract void loseHealth(double healthLost);
+    abstract double getCurrentHealth();
+    abstract double getMaxHealth();
     abstract boolean isDead();
 }

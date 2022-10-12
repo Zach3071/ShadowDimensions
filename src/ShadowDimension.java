@@ -166,8 +166,6 @@ public class ShadowDimension extends AbstractGame {
                     BottomRightY = Integer.parseInt(row[COLUMN_Y]);
                 }
 
-
-
                 // clean this
                 Point topLeft = new Point(topLeftX, topLeftY);
                 Point bottomRight = new Point(BottomRightX, BottomRightY);
@@ -205,10 +203,13 @@ public class ShadowDimension extends AbstractGame {
         for (DemonEnemy demon : listOfEnemies) {
             if (!demon.isDead()) {
                 demon.update(this);
+                if (demon.attack(Fae)) {
+                    Fae.triggerInvincibility();
+                }
             }
         }
-
     }
+
 
     // draws the background image of the game
     private void displayLevelZero() {
@@ -277,13 +278,14 @@ public class ShadowDimension extends AbstractGame {
                 hasStarted = true;
                 isLevelZero = true;
             }
-            if (input.wasPressed(Keys.K)) {
+            if (input.wasPressed(Keys.M)) {
                 hasStarted = true;
                 isLevelOne = true;
                 levelCompletedScreen = false;
                 readCSV(LEVEL_ONE_CSV);
             }
         }
+
         if (levelCompletedScreen){
             // displays level completed message for 3000 milliseconds
             if (((REFRESH_RATE/MILLI_SECONDS) * LEVEL_COMPLETE_DELAY) >= counter - initialFrameCount){
@@ -305,13 +307,11 @@ public class ShadowDimension extends AbstractGame {
         if (isLevelZero) {
             displayLevelZero();
 
+
             // draws the objects and checks if player interacts with them
             updateObjects();
             Fae.update(input, this);
 
-            // delegate this to player
-//            HealthBar healthBar = new HealthBar(Fae.getCurrentHealth(), Fae.getMaxHealth());
-//            healthBar.drawHealthBar();
 
             if (gateReached(Fae)) {
                 if (initialFrameCount == 0) {
@@ -323,27 +323,27 @@ public class ShadowDimension extends AbstractGame {
         }
 
         if (isLevelOne) {
-
+            Timescale.update(input);
             displayLevelOne();
             updateObjects();
             Fae.update(input, this);
+            // player attacks enemy, if enemy is in attacking range whilst player is in attack mode
             if (Fae.isAttacking()){
-                System.out.println("FaE IS ATtacking");
-                // check enemy method
-                if (checkAttack(Fae) != null) {
-                    if (!checkAttack(Fae).isInvincible()) {
-                        checkAttack(Fae).loseHealth(Fae.getDamage());
-                    }
-                    checkAttack(Fae).setInvincible();
+                for (DemonEnemy currentEnemy : listOfEnemies) {
 
-                    System.out.println(checkAttack(Fae).getPosition());
+                    // examines and attacks enemy if it is in player's attack range
+                    if (!currentEnemy.isInvincible() && Fae.attack(currentEnemy)) {
+                            currentEnemy.triggerInvincibility();
+                            System.out.println(currentEnemy.getPosition());
+                        }
+                    }
                 }
             }
-
-        }
+            Timescale.setTimescaleUpdated();
+        //System.out.println(Timescale.hasTimescaleUpdated());
 
         // character has lost the game, once they have lost all health
-        if (Fae.getCurrentHealth() <= Fae.getMinHealth()) {
+        if (Fae.isDead()) {
             isLevelZero = false;
             isLevelOne = false;
             losingScreen = true;
@@ -395,12 +395,9 @@ public class ShadowDimension extends AbstractGame {
                     Fae.loseHealth(SINKHOLE_DAMAGE);
                     sinkhole.setDeleted();
 
-                    System.out.println("Sinkhole inflicts " + SINKHOLE_DAMAGE + " damage on Fae.");
-                    System.out.print(" Fae's current health: " + Fae.getCurrentHealth() + "/" +
-                    Fae.getMaxHealth());
-
-
-
+                    System.out.println("Sinkhole inflicts " + (int)SINKHOLE_DAMAGE +
+                            " damage on Fae. Fae's current health: " +
+                            (int)Fae.getCurrentHealth() + "/" + (int)Fae.getMaxHealth());
                     }
             }
         }
