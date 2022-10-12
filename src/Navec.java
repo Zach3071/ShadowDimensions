@@ -46,7 +46,7 @@ public class Navec extends DemonEnemy{
 
 
     @Override
-    void update(ShadowDimension gameObject) {
+    void update(LevelManager gameObject) {
         if (direction.equals("UP")) {
             move(0, - speed);
         } else if (direction.equals("DOWN")) {
@@ -67,8 +67,10 @@ public class Navec extends DemonEnemy{
             }
         }
 
-    updateTimescaleSpeed();
+        updateTimescaleSpeed();
+
         healthBar.drawHealthBar(position.x, position.y-6, HEALTHBAR_FONT, currentHealth, MAX_HEALTH);
+
         gameObject.checkOutOfBounds(this);
         gameObject.checkCollisions(this);
         render();
@@ -82,13 +84,12 @@ public class Navec extends DemonEnemy{
             } else {
                 speed = SET_SPEED * Math.pow(.5, -Timescale.getTimescale());
             }
-            System.out.println(speed);
         }
         else if (Timescale.getTimescale() == 0 && !Timescale.hasTimescaleUpdated()) {
             speed = SET_SPEED;
         }
     }
-    public void renderInvincibility(ShadowDimension gameObject) {
+    public void renderInvincibility(LevelManager gameObject) {
         if (facingLeft) {
             currentImage = new Image(INVINCIBLE_LEFT);
         } else {

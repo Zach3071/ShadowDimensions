@@ -36,7 +36,7 @@ public abstract class DemonEnemy extends Entity implements Moveable, Invincible{
     }
 
 
-    abstract void update(ShadowDimension gameObject);
+    abstract void update(LevelManager gameObject);
     abstract void updateTimescaleSpeed();
     abstract void render();
 }

@@ -41,7 +41,6 @@ public class Player extends Entity implements Moveable, Invincible {
         this.currentHealth = MAX_HEALTH;
         this.currentImage = new Image(FAE_RIGHT);
         this.facingRight = true;
-        //COLOUR.setBlendColour(GREEN);
     }
 
     public double getPlayerX() {
@@ -64,8 +63,6 @@ public class Player extends Entity implements Moveable, Invincible {
         this.playerY = playerY;
     }
 
-    public void loseHealth(double healthLost){ currentHealth -= healthLost; }
-
     @Override
     boolean isDead() { return currentHealth <= MIN_HEALTH;}
 
@@ -75,12 +72,14 @@ public class Player extends Entity implements Moveable, Invincible {
         }
         return currentHealth;
     }
+
+    public void loseHealth(double healthLost){ currentHealth -= healthLost; }
     public double getMaxHealth(){ return MAX_HEALTH; }
-    public double getMinHealth() {
-        return MIN_HEALTH;
+    public void setHealth(double health) {
+        currentHealth = health;
     }
 
-    public void update(Input input, ShadowDimension gameObject){
+    public void update(Input input, LevelManager gameObject){
         if (input.isDown(Keys.UP)){
             setPrevPosition();
             move(0, - MOVE_SIZE);
@@ -111,23 +110,19 @@ public class Player extends Entity implements Moveable, Invincible {
 
         this.currentImage.drawFromTopLeft(position.x, position.y);
         gameObject.checkCollisions(this);
-        //renderHealthPoints();
-        healthBar.drawHealthBar(HEALTH_BAR_X, HEALTH_BAR_Y, HEALTH_BAR_FONT_SIZE, currentHealth, MAX_HEALTH);
         gameObject.checkOutOfBounds(this);
+
+        healthBar.drawHealthBar(HEALTH_BAR_X, HEALTH_BAR_Y, HEALTH_BAR_FONT_SIZE, currentHealth, MAX_HEALTH);
         currentFrameCount++;
     }
 
-    // tidy this up // ******************
     private void initiateAttack(Input input) {
         if (!isAttacking) {
             // adds a 2-second cool down timer, which prevents user from attacking *****************************
-            if (((ShadowDimension.REFRESH_RATE / ShadowDimension.MILLI_SECONDS) * ATTACK_DELAY)
-                    <= currentFrameCount - initialFrameCount) {
-
-                if (input.wasPressed(Keys.A)) {
+            if (((ShadowDimension.REFRESH_RATE / ShadowDimension.MILLI_SECONDS) * (ATTACK_DELAY+1000))
+                    <= currentFrameCount - initialFrameCount && input.wasPressed(Keys.A)) {
                     initialFrameCount = currentFrameCount;
                     isAttacking = true;
-                }
             }
         } else {
             if (facingRight) {
@@ -176,16 +171,14 @@ public class Player extends Entity implements Moveable, Invincible {
         return entityBox;
     }
     public boolean isAttacking(){ return isAttacking; }
-    public int getDamage(){ return DAMAGE; }
-
 
     public boolean isInvincible() { return isInvincible; }
 
     @Override
     public void triggerInvincibility() { isInvincible = true; }
 
-    @Override
-    public void renderInvincibility(ShadowDimension gameObject) {
+    //@Override
+    public void renderInvincibility(LevelManager gameObject) {
         // starts invincibility timer
         if (!checkedInitialFrame) {
             initialFrameCount = currentFrameCount;

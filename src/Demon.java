@@ -51,7 +51,7 @@ public class Demon extends DemonEnemy {
     }
 
     @Override
-    void update(ShadowDimension gameObject) {
+    void update(LevelManager gameObject) {
         if (direction.equals("UP")) {
             move(0, - speed);
         } else if (direction.equals("DOWN")) {
@@ -75,6 +75,7 @@ public class Demon extends DemonEnemy {
         updateTimescaleSpeed();
 
         healthBar.drawHealthBar(position.x, position.y-6, HEALTHBAR_FONT, currentHealth, MAX_HEALTH);
+
         gameObject.checkOutOfBounds(this);
         gameObject.checkCollisions(this);
         render();
@@ -88,7 +89,6 @@ public class Demon extends DemonEnemy {
             } else {
                 speed = SET_SPEED * Math.pow(.5, -Timescale.getTimescale());
             }
-            System.out.println(speed);
         }
         else if (Timescale.getTimescale() == 0 && !Timescale.hasTimescaleUpdated()) {
             speed = SET_SPEED;
@@ -96,7 +96,7 @@ public class Demon extends DemonEnemy {
     }
 
     // turns object invincible if attacked
-    public void renderInvincibility(ShadowDimension gameObject) {
+    public void renderInvincibility(LevelManager gameObject) {
         if (facingLeft) {
             currentImage = new Image(INVINCIBLE_LEFT);
         } else {
@@ -259,19 +259,4 @@ public class Demon extends DemonEnemy {
 
     }
 
-    public void increaseSpeed() {
-        Timescale.getTimescale();
-    }
-
-//    public boolean fireAttack(Player player) {
-//        Point playerCentre = player.getBoundingBox().centre();
-//        Rectangle demonBox = getBoundingBox();
-//        Point demonCentre = getBoundingBox().centre();
-//
-//        if (getBoundingBox().centre().distanceTo(playerCentre) <= ATTACK_RANGE) {
-//            renderFire(playerCentre, demonCentre, demonBox, player);
-//            return true;
-//        }
-//        return false;
-//    }
 }

@@ -6,6 +6,7 @@ public class Timescale {
     private static final int MIN_TIMESCALE = -3;
     private static int timescale = 0;
     private static boolean timescaleUpdated;
+
     public static void update(Input input) {
         if (input.wasPressed(Keys.L)) {
             if (timescale != MAX_TIMESCALE) {
