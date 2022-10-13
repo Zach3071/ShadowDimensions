@@ -2,7 +2,7 @@ import bagel.DrawOptions;
 import bagel.Image;
 import bagel.util.Point;
 import bagel.util.Rectangle;
-
+/** This class is a type of demon that is the final boss in level 1 */
 public class Navec extends DemonEnemy{
     private final static String NAVEC_LEFT = "res/navec/navecLeft.png";
     private final static String NAVEC_RIGHT = "res/navec/navecRight.png";
@@ -31,12 +31,18 @@ public class Navec extends DemonEnemy{
 
     Navec(Point position) {
         this.position = position;
+        // uses demonEntity function to give a random direction
         this.direction = String.valueOf(Direction.setRandomDirection());
+
+        // uses demonEntity function to give a random speed within a set interval
         this.SET_SPEED = setRandomSpeed();
+
         this.speed = this.SET_SPEED;
+
         this.currentImage = new Image(NAVEC_LEFT);
         this.facingLeft = true;
         this.fireImage = new Image(NAVEC_FIRE);
+
         if (direction.equals("RIGHT")) {
             this.currentImage = new Image(NAVEC_RIGHT);
             this.facingLeft = false;
@@ -44,9 +50,11 @@ public class Navec extends DemonEnemy{
     }
 
 
-
+    /** This updates and renders Navec's movement and properties
+     * @param gameObject Used to refer to the object itself in level manager class
+     */
     @Override
-    void update(LevelManager gameObject) {
+    public void update(LevelManager gameObject) {
         if (direction.equals("UP")) {
             move(0, - speed);
         } else if (direction.equals("DOWN")) {
@@ -67,6 +75,7 @@ public class Navec extends DemonEnemy{
             }
         }
 
+        // Checks if timescale speed has been updated
         updateTimescaleSpeed();
 
         healthBar.drawHealthBar(position.x, position.y-6, HEALTHBAR_FONT, currentHealth, MAX_HEALTH);
@@ -76,8 +85,8 @@ public class Navec extends DemonEnemy{
         render();
         currentFrameCount++;
     }
-
-    void updateTimescaleSpeed() {
+    /** Checks if timescale speed has been changed and updates Navec's speed */
+    public void updateTimescaleSpeed() {
         if (Timescale.getTimescale() != 0 && !Timescale.hasTimescaleUpdated()) {
             if (Timescale.getTimescale() > 0) {
                 speed = SET_SPEED * Math.pow(1.5, Timescale.getTimescale());
@@ -89,6 +98,11 @@ public class Navec extends DemonEnemy{
             speed = SET_SPEED;
         }
     }
+    /** This renders the demon
+     *  as invincible for 3000 milliseconds and
+     *  renders it with its invincible image
+     * @param gameObject
+     */
     public void renderInvincibility(LevelManager gameObject) {
         if (facingLeft) {
             currentImage = new Image(INVINCIBLE_LEFT);
@@ -107,13 +121,21 @@ public class Navec extends DemonEnemy{
             checkedInitialFrame = false;
         }
     }
-
+    /** This renders the current image
+     * for Navec
+     */
     @Override
     public void render() {
         this.currentImage.drawFromTopLeft(position.x, position.y);
     }
 
-
+    /** This updates Navec's position
+     * to a new position, this is used to
+     * display the demon moving in the update
+     * function
+     * @param xMove This is the new x coordinate
+     * @param yMove This is the new y coordinate
+     */
     @Override
     public void move(double xMove, double yMove) {
         double newX = position.x + xMove;
@@ -127,6 +149,10 @@ public class Navec extends DemonEnemy{
     @Override
     Image getCurrentImage() { return currentImage; }
 
+    /** This rebounds Navec into the opposite
+     * direction. Usually when it has collided with
+     * an object
+     */
     @Override
     public void moveBack() {
         switch (direction) {
@@ -158,23 +184,36 @@ public class Navec extends DemonEnemy{
                 getCurrentImage().getHeight());
         return entityBox;
     }
+    /** Navec loses a certain amount of
+     * health
+     * @param healthLost This is the amount of health being lost
+     */
+    @Override
+    public void loseHealth(double healthLost) { currentHealth -= healthLost; }
 
     @Override
-    void loseHealth(double healthLost) { currentHealth -= healthLost; }
+    public double getCurrentHealth() { return currentHealth; }
 
     @Override
-    double getCurrentHealth() { return currentHealth; }
+    public double getMaxHealth() { return (int)MAX_HEALTH; }
 
     @Override
-    double getMaxHealth() { return (int)MAX_HEALTH; }
+    public boolean isDead() { return currentHealth <= MIN_HEALTH; }
 
-    @Override
-    boolean isDead() { return currentHealth <= MIN_HEALTH; }
-
-
+    /** Demon's invincible attribute is set
+     * to true
+     */
     public void triggerInvincibility() { isInvincible = true; }
     public boolean isInvincible() { return isInvincible; }
 
+    /** Navec renders a fire depending on the location of the player
+     *
+     * @param playerCentre This is the centre of the player's coordinates
+     * @param demonCentre This is the centre coordinates of Navec
+     * @param demonBox This is the Navec's rectangle
+     * @param player This is the player being used
+     * @return This returns true if the player has intersected with a fire's rectangle box
+     */
     public boolean fireAttack(Point playerCentre, Point demonCentre, Rectangle demonBox, Player player) {
         // fire is rendered at top-left of demon
         if (playerCentre.x <= demonCentre.x && playerCentre.y <= demonCentre.y) {
@@ -222,6 +261,11 @@ public class Navec extends DemonEnemy{
         }
         return false;
     }
+    /** This renders the fire if the player is
+     * within Navec's attacking range
+     * @param player This is the player being used
+     * @return This returns true if the player has been successfully attacked
+     */
     public boolean attack(Player player) {
         Point playerCentre = player.getBoundingBox().centre();
         Rectangle demonBox = getBoundingBox();

@@ -9,6 +9,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/** This class manages each level of the game and updates & renders
+ * objects/conditions from each level */
+
 public class LevelManager {
     private final static int DEFAULT_FONT_SIZE = 75;
     private final static int MESSAGE_FONT_SIZE = 40;
@@ -34,17 +37,17 @@ public class LevelManager {
     private double topLeftY;
     private double BottomRightX;
     private double BottomRightY;
-    final static double WINNING_COORDINATES_X = 950;
-    final static double WINNING_COORDINATES_Y = 670;
+    private final static double WINNING_COORDINATES_X = 950;
+    private final static double WINNING_COORDINATES_Y = 670;
     private static final double SINKHOLE_DAMAGE = 30;
 
     // Objects loaded by each level
-    Player Fae = new Player();
-    List<Wall> listOfWalls = new ArrayList<>();
-    List<Sinkhole> listOfSinkholes = new ArrayList<>();
-    List<Tree> listOfTrees = new ArrayList<>();
-    List<DemonEnemy> listOfEnemies = new ArrayList<>();
-    Boundary gameWall = new Boundary();
+    private Player Fae = new Player();
+    private List<Wall> listOfWalls = new ArrayList<>();
+    private List<Sinkhole> listOfSinkholes = new ArrayList<>();
+    private List<Tree> listOfTrees = new ArrayList<>();
+    private List<DemonEnemy> listOfEnemies = new ArrayList<>();
+    private Boundary gameWall = new Boundary();
 
 
     private boolean levelCompletedScreen;
@@ -60,6 +63,11 @@ public class LevelManager {
         this.playerInitialised = false;
     }
 
+    /** This loads the current level's objects using its corresponding CSV file,
+     * and is used in the ShadowDimension update function.
+     * It also updates and renders each object.
+     * @param input This is input made by the user
+     */
     public void loadCurrentLevel(Input input) {
 
         if (level == LEVEL_ZERO) {
@@ -72,6 +80,7 @@ public class LevelManager {
             displayLevelZero();
             Fae.update(input, this);
             updateObjects();
+
             if (gateReached(Fae)) {
                 if (frameCountAtGate == 0) {
                     frameCountAtGate = ShadowDimension.frameCounter;
@@ -138,8 +147,9 @@ public class LevelManager {
     }
 
     /**
-     * Method used to read file and create objects (You can change this
-     * method as you wish).
+     * Method used to read CSV files and load objects
+     * @param levelFileName This is the CSV file being loaded in
+     *                      for a certain level
      */
     private void readCSV(String levelFileName){
 
@@ -153,7 +163,7 @@ public class LevelManager {
         try {
             BufferedReader br = new BufferedReader(new FileReader(levelFileName));
 
-            // overwrites previous read CSV file
+            // Overwrites previous read CSV file
             listOfWalls.clear();
             listOfSinkholes.clear();
             listOfTrees.clear();
@@ -219,6 +229,7 @@ public class LevelManager {
             e.printStackTrace();
         }
     }
+
     private void updateObjects() {
 
         // updates and draws walls in game
@@ -237,8 +248,11 @@ public class LevelManager {
         }
 
         for (DemonEnemy demon : listOfEnemies) {
+            // ensures that only alive demons are rendered and updated
             if (!demon.isDead()) {
                 demon.update(this);
+
+
                 if (demon.attack(Fae)) {
                     Fae.triggerInvincibility();
                 }
@@ -249,6 +263,10 @@ public class LevelManager {
         }
     }
 
+    /** This method is used by entities to check if their bounding box collides
+     * with certain objects
+     * @param entity This is the entity being checked for collisions
+     */
     public void checkCollisions(Entity entity) {
 
         Rectangle entityBox = entity.getBoundingBox();
@@ -276,19 +294,23 @@ public class LevelManager {
                     entity.moveBack();
                 }
                 // a player is damaged if they hit a sinkhole
-                else if (entityBox.intersects(sinkhole.getBoundingBox()) == true) {
+                else if (entityBox.intersects(sinkhole.getBoundingBox())) {
                     // FIX THIS CHANGE TO ENTITY
-                    Fae.loseHealth(SINKHOLE_DAMAGE);
+                    entity.loseHealth(SINKHOLE_DAMAGE);
                     sinkhole.setDeleted();
 
                     System.out.println("Sinkhole inflicts " + (int)SINKHOLE_DAMAGE +
                             " damage on Fae. Fae's current health: " +
-                            (int)Fae.getCurrentHealth() + "/" + (int)Fae.getMaxHealth());
+                            (int)entity.getCurrentHealth() + "/" + (int)entity.getMaxHealth());
                 }
             }
         }
     }
 
+    /** This checks if an entity has collided with the wall boundary and
+     * rebounds them back if true
+     * @param entity This is the entity being checked for the collision
+     */
     public void checkOutOfBounds(Entity entity) {
         Point currentPosition = entity.getPosition();
         if ((currentPosition.y > gameWall.getBottomY()) || (currentPosition.y < gameWall.getTopY())
@@ -297,13 +319,16 @@ public class LevelManager {
         }
     }
 
-    // FIX THIS
+    /** Checks if a player has reached level 1's portal gate
+     * @param player This is the player that will have its coordinates checked
+     * @return Returns true if player has reached the gate
+     */
     public boolean gateReached(Player player){
-
         return player.getPlayerX() >= WINNING_COORDINATES_X && Fae.getPlayerY() >= WINNING_COORDINATES_Y;
     }
-
+    /** Checks if the player has died */
     public boolean isGameover() { return Fae.isDead(); }
+    /** Checks if the player has killed Navec */
     public boolean isGameWon() { return gameWon; }
 
 

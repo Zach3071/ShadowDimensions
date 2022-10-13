@@ -2,10 +2,9 @@ import bagel.Image;
 import bagel.util.Rectangle;
 import bagel.util.Point;
 
-import java.time.Year;
-
+/** This class contains the properties and attributes for walls */
 public class Wall {
-    public final double xPosition;
+    private final double xPosition;
     private final double yPosition;
     private Image wall;
 
@@ -14,7 +13,7 @@ public class Wall {
         this.xPosition = xPosition;
         this.yPosition = yPosition;
     }
-
+    /** Draws the image of the wall */
     public void render(){ wall.drawFromTopLeft(xPosition, yPosition); }
 
     public Rectangle getBoundingBox(){

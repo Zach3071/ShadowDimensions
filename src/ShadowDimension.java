@@ -11,8 +11,13 @@ import bagel.util.Point;
 public class ShadowDimension extends AbstractGame {
 
     // window, title and message sizes
+    /** This is the refresh rate used to update the game */
     public final static float REFRESH_RATE = 60;
+    /** Milliseconds in a second */
     public final static float MILLI_SECONDS = 1000;
+    /** This is the amount of frames that have passed since
+     * the program has begun running
+     */
     public static int frameCounter = 0;
     private final static int WINDOW_WIDTH = 1024;
     private final static int WINDOW_HEIGHT = 768;
@@ -25,10 +30,10 @@ public class ShadowDimension extends AbstractGame {
 
 
     // font object used for big default titles, "CONGRATULATIONS!", "GAME OVER!" etc.
-    Font titleMessage = new Font("res/frostbite.ttf", MESSAGE_FONT_SIZE);
-    Font titleName = new Font("res/frostbite.ttf", DEFAULT_FONT_SIZE);
-    Point startingTitlePosition = new Point(STARTING_TITLE_POSITION_X, STARTING_TITLE_POSITION_Y);
-    Point messagePosition = new Point(MESSAGE_POSITION_X, MESSAGE_POSITION_Y);
+    private Font titleMessage = new Font("res/frostbite.ttf", MESSAGE_FONT_SIZE);
+    private Font titleName = new Font("res/frostbite.ttf", DEFAULT_FONT_SIZE);
+    private Point startingTitlePosition = new Point(STARTING_TITLE_POSITION_X, STARTING_TITLE_POSITION_Y);
+    private Point messagePosition = new Point(MESSAGE_POSITION_X, MESSAGE_POSITION_Y);
 
     // main game messages displayed
     private final static String GAME_TITLE = "SHADOW DIMENSION";
@@ -80,6 +85,7 @@ public class ShadowDimension extends AbstractGame {
     /**
      * Performs a state update.
      * allows the game to exit when the escape key is pressed.
+     * Accesses the levels class to update objects for each level
      */
     @Override
     protected void update(Input input) {
@@ -110,4 +116,8 @@ public class ShadowDimension extends AbstractGame {
         }
 
     }
+
+    public float getRefreshRate() { return REFRESH_RATE; }
+    public float getMilliSeconds() { return MILLI_SECONDS;}
+    public float getCurrentFrameCount() { return frameCounter; }
 }

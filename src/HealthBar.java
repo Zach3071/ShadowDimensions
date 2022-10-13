@@ -1,7 +1,9 @@
 import bagel.DrawOptions;
 import bagel.Font;
-import java.lang.Math; // Using round function
 
+/** This class is usually implemented by entitys
+ * that contain a health attribute
+ */
 public class HealthBar {
 
     private double currentHealthPoints;
@@ -17,6 +19,16 @@ public class HealthBar {
         this.maximumHealthPoints = maximumHealthPoints;
     }
 
+
+    /** This renders a health bar with text displaying
+     * the percentage of its currentHealth from maximumHealth,
+     * the colours change depending on the percentage of health
+     * @param xPosition This is the x coordinate of the health bar
+     * @param yPosition This is the y coordinate of the health bar
+     * @param fontSize This is the font size of the text displayed from the health bar
+     * @param currentHealthPoints This is the current health of the entity
+     * @param maximumHealthPoints This is the maximum health of the entity
+     */
     public void drawHealthBar(double xPosition, double yPosition, int fontSize,
                               double currentHealthPoints, double maximumHealthPoints){
         double healthPercent = currentHealthPoints / maximumHealthPoints * 100;

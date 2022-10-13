@@ -3,16 +3,17 @@ import bagel.util.Point;
 import bagel.util.Rectangle;
 
 // partial project1 solution has been used
+
+/**
+ * This class contains properties of the main character in the game which
+ * attempts to pass each level
+ */
 public class Player extends Entity implements Moveable, Invincible {
     private final static String FAE_LEFT = "res/fae/faeLeft.png";
     private final static String FAE_RIGHT = "res/fae/faeRight.png";
     private final static String ATTACK_LEFT = "res/fae/faeAttackLeft.png";
     private final static String ATTACK_RIGHT = "res/fae/faeAttackRight.png";
     private static final double INVINCIBLE_LENGTH = 3000;
-    private double playerX;
-    private double playerY;
-    private final Image faeLeft;
-    private final Image faeRight;
     public final static double MOVE_SIZE = 2;
     private boolean facingRight;
     private Point position;
@@ -36,8 +37,6 @@ public class Player extends Entity implements Moveable, Invincible {
     HealthBar healthBar = new HealthBar(currentHealth, MAX_HEALTH);
 
     Player(){
-        faeLeft = new Image("res/fae/faeLeft.png");
-        faeRight = new Image("res/fae/faeRight.png");
         this.currentHealth = MAX_HEALTH;
         this.currentImage = new Image(FAE_RIGHT);
         this.facingRight = true;
@@ -59,13 +58,14 @@ public class Player extends Entity implements Moveable, Invincible {
 
     public void setPosition(double playerX, double playerY) {
         this.position = new Point(playerX, playerY);
-        this.playerX = playerX;
-        this.playerY = playerY;
     }
 
     @Override
     boolean isDead() { return currentHealth <= MIN_HEALTH;}
 
+    /** Returns player's current health
+     * @return This is the player's current health
+     */
     public double getCurrentHealth(){
         if (currentHealth <= MIN_HEALTH) {
             currentHealth = MIN_HEALTH;
@@ -73,12 +73,20 @@ public class Player extends Entity implements Moveable, Invincible {
         return currentHealth;
     }
 
+    /** Player loses health
+     * @param healthLost This is the amount of health lost
+     */
     public void loseHealth(double healthLost){ currentHealth -= healthLost; }
     public double getMaxHealth(){ return MAX_HEALTH; }
     public void setHealth(double health) {
         currentHealth = health;
     }
 
+    /** This update's the player's movement and special properties,
+     * such as attacking, invincibility and collisions etc.
+     * @param input This is the input taken from the user
+     * @param gameObject This is a refernce to the object itself in the level manager class
+     */
     public void update(Input input, LevelManager gameObject){
         if (input.isDown(Keys.UP)){
             setPrevPosition();
@@ -143,6 +151,11 @@ public class Player extends Entity implements Moveable, Invincible {
             }
         }
     }
+
+    /** This method attempts to a given enemy
+     * @param enemy This is the enemy attempting to be attacked
+     * @return Returns true if attack was successful
+     */
     public boolean attack(DemonEnemy enemy) {
         Rectangle entityBox = enemy.getBoundingBox();
         if (entityBox.intersects(getBoundingBox())) {
@@ -156,9 +169,13 @@ public class Player extends Entity implements Moveable, Invincible {
     }
 
     public void setPrevPosition(){ this.prevPosition = new Point(position.x, position.y); }
-
+    /** Moves the player back to its previous position, usually used for collisions */
     public void moveBack(){ this.position = prevPosition; }
 
+    /** Moves the player to its new coordinates
+     * @param xMove This is the new x coordinate
+     * @param yMove This is the new y coordinate
+     */
     public void move(double xMove, double yMove){
         double newX = position.x + xMove;
         double newY = position.y + yMove;
@@ -173,11 +190,14 @@ public class Player extends Entity implements Moveable, Invincible {
     public boolean isAttacking(){ return isAttacking; }
 
     public boolean isInvincible() { return isInvincible; }
-
+    /** Sets the players invincibility to true */
     @Override
     public void triggerInvincibility() { isInvincible = true; }
 
-    //@Override
+    /** Starts the invincibility timer for the player if the player
+     * has been triggered as invincible
+     * @param gameObject
+     */
     public void renderInvincibility(LevelManager gameObject) {
         // starts invincibility timer
         if (!checkedInitialFrame) {

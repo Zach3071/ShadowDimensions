@@ -3,8 +3,10 @@ import bagel.Image;
 import bagel.util.Point;
 import bagel.util.Rectangle;
 
-import java.sql.Time;
 
+/** This class contains the code for the demon
+ * which is an enemy of Fae
+ */
 public class Demon extends DemonEnemy {
     private final static String DEMON_LEFT = "res/demon/demonLeft.png";
     private final static String DEMON_RIGHT = "res/demon/demonRight.png";
@@ -50,8 +52,12 @@ public class Demon extends DemonEnemy {
         }
     }
 
+    /** This is used to move and render the demon's image and health bar
+     * as well as to check its invincibility state and collisions
+      * @param gameObject This is used to reference the object itself
+     */
     @Override
-    void update(LevelManager gameObject) {
+    public void update(LevelManager gameObject) {
         if (direction.equals("UP")) {
             move(0, - speed);
         } else if (direction.equals("DOWN")) {
@@ -82,7 +88,10 @@ public class Demon extends DemonEnemy {
         currentFrameCount++;
     }
 
-     void updateTimescaleSpeed() {
+    /** This is used to check and update the speed of the
+     * demon if the timescale function has been used
+     */
+    public void updateTimescaleSpeed() {
         if (Timescale.getTimescale() != 0 && !Timescale.hasTimescaleUpdated()) {
             if (Timescale.getTimescale() > 0) {
                 speed = SET_SPEED * Math.pow(1.5, Timescale.getTimescale());
@@ -95,7 +104,11 @@ public class Demon extends DemonEnemy {
         }
     }
 
-    // turns object invincible if attacked
+    /** This renders the demon
+     *  as invincible for 3000 milliseconds and
+     *  renders it with its invincible image
+     * @param gameObject
+     */
     public void renderInvincibility(LevelManager gameObject) {
         if (facingLeft) {
             currentImage = new Image(INVINCIBLE_LEFT);
@@ -114,6 +127,10 @@ public class Demon extends DemonEnemy {
             checkedInitialFrame = false;
         }
     }
+
+    /** This renders the current image
+     * for the demon
+     */
     @Override
     public void render() {
         this.currentImage.drawFromTopLeft(position.x, position.y);
@@ -125,6 +142,13 @@ public class Demon extends DemonEnemy {
         return Math.random() < 0.5;
     }
 
+    /** This updates the demons position
+     * to a new position, this is used to
+     * display the demon moving in the update
+     * function
+     * @param xMove This is the new x coordinate
+     * @param yMove This is the new y coordinate
+     */
     @Override
     public void move(double xMove, double yMove) {
         double newX = position.x + xMove;
@@ -132,6 +156,10 @@ public class Demon extends DemonEnemy {
         this.position = new Point(newX, newY);
     }
 
+    /** This rebounds the demon into the opposite
+     * direction. Usually when it has collided with
+     * an object
+     */
     @Override
     public void moveBack() {
         switch (direction) {
@@ -172,10 +200,16 @@ public class Demon extends DemonEnemy {
     }
 
 
-
-
+    /** Demon's invincible attribute is set
+     * to true
+     */
     public void triggerInvincibility() { isInvincible = true; }
     public boolean isInvincible() { return isInvincible; }
+
+    /** Demon loses a certain amount of
+     * health
+     * @param healthLost This is the amount of health being lost
+     */
     public void loseHealth(double healthLost){ currentHealth -= healthLost; }
 
     @Override
@@ -186,6 +220,14 @@ public class Demon extends DemonEnemy {
 
     public boolean isDead() { return currentHealth <= MIN_HEALTH; }
 
+    /** Demon renders a fire depending on the location of the player
+     *
+     * @param playerCentre This is the centre of the player's coordinates
+     * @param demonCentre This is the centre coordinates of the demon
+     * @param demonBox This is the demon's rectangle
+     * @param player This is the player being used
+     * @return This returns true if the player has intersected with a fire's rectangle box
+     */
     public boolean fireAttack(Point playerCentre, Point demonCentre, Rectangle demonBox, Player player) {
         // fire is rendered at top-left of demon
         if (playerCentre.x <= demonCentre.x && playerCentre.y <= demonCentre.y) {
@@ -237,8 +279,11 @@ public class Demon extends DemonEnemy {
     }
 
 
-
-
+    /** This renders the fire if the player is
+     * within the demons attacking range
+     * @param player This is the player being used
+     * @return This returns true if the player has been successfully attacked
+     */
     public boolean attack(Player player) {
         Point playerCentre = player.getBoundingBox().centre();
         Rectangle demonBox = getBoundingBox();
