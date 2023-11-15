@@ -4,8 +4,7 @@ import bagel.util.Point;
 
 /**
  * Skeleton Code for SWEN20003 Project 1, Semester 2, 2022
- * Please enter your name below
- * @ ZACHARY KLIMAS, 1271087
+   ZACHARY KLIMAS
  */
 
 public class ShadowDimension extends AbstractGame {
